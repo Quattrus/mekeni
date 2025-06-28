@@ -1,4 +1,5 @@
 import * as THREE from 'https://esm.sh/three@0.155.0';
+import * as CANNON from 'https://esm.sh/cannon-es';
 import {createEntity , addComponent, getAllComponents, getComponent, system, tick} from './frame.js';
 import { input, setupInput } from './input.js';
 
@@ -8,10 +9,23 @@ const renderer = new THREE.WebGLRenderer();
 
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(0x222222);
+
 renderer.render(scene, camera);
 document.body.appendChild(renderer.domElement);
 
 setupInput(renderer.domElement);
+camera.position.set(0, 0, 5);
+
+//Cannon-es physworld
+const physWorld = new CANNON.World({
+    gravity: new CANNON.Vec3(0, -9.82, 0),
+});
+
+//Ground plane
+const groundBody = new CANNON.Body({mass: 0});
+groundBody.addShape(new CANNON.Plane());
+groundBody.quaternion.setFromEuler(-Math.PI/2, 0, 0);
+physWorld.addBody(groundBody);
 
 
 //Create cube
@@ -23,64 +37,45 @@ scene.add(mesh);
 // === ENGINE SETUP ===
 const cube = createEntity();
 addComponent(cube, 'Transform', {mesh});
-addComponent(cube, 'Rotator', {speed: 1.5});
-addComponent(cube, 'Velocity', {x: 0.5, y: 0, z: 0});
 addComponent(cube, 'PlayerControlled', true);
 
-// Rotation Control
-system((dt) => {
-  for (const [entity, rotator] of getAllComponents('Rotator') || []) {
-    const transform = getComponent(entity, 'Transform');
-    if (transform?.mesh) {
-      transform.mesh.rotation.x += rotator.speed * dt;
-      transform.mesh.rotation.y += rotator.speed * dt;
+const halfExtents = new CANNON.Vec3(0.5, 0.5, 0.5);
+const boxShape = new CANNON.Box(halfExtents);
+const body = new CANNON.Body({mass: 1});
+body.addShape(boxShape);
+body.position.set(mesh.position.x, mesh.position.y, mesh.position.z);
+physWorld.addBody(body);
+
+addComponent(cube, 'Physics', {body});
+
+//Player input
+system((dt) =>{
+    for(const[entity] of getAllComponents('PlayerControlled')){
+        const physics = getComponent(entity, 'Physics');
+        if(!physics) continue;
+
+        physics.body.velocity.set(0, physics.body.velocity.y, 0);
+        const force = 5;
+        if (input.keys.has('a') || input.keys.has('ArrowLeft')) physics.body.velocity.x = -force;
+        if (input.keys.has('d') || input.keys.has('ArrowRight')) physics.body.velocity.x = force;
+        if(input.keys.has('w') || input.keys.has('ArrowUp')) physics.body.velocity.z = -force;
+        if(input.keys.has('s') || input.keys.has('ArrowDown')) physics.body.velocity.z = force;
     }
-  }
-});
+})
 
-//Velocity control
+//PhysicsSystem 
 system((dt) => {
-      for(const [entity, velocity] of getAllComponents('Velocity')){
-    const transform = getComponent(entity, 'Transform');
-    if(transform?.mesh){
-        transform.mesh.position.x += velocity.x * dt;
-        transform.mesh.position.y += velocity.y * dt;
-        transform.mesh.position.z += velocity.z * dt;
+    physWorld.step(1/60, dt, 3);
+    for(const [entity, physics] of getAllComponents('Physics')){
+        const transform = getComponent(entity, 'Transform');
+        if(!transform?.mesh)  continue;
+        transform.mesh.position.copy(physics.body.position);
+        transform.mesh.quaternion.copy(physics.body.quaternion);
     }
-  }
-});
-
-system((dt) => {
-    for(const [entity] of getAllComponents('PlayerControlled')){
-        const velocity = getComponent(entity, 'Velocity');
-        if(!velocity) continue;
-
-        velocity.x = 0;
-        velocity.y = 0;
-
-        if(input.keys.has('ArrowLeft') || input.keys.has('a')){
-            velocity.x = -1;
-        }
-
-        if(input.keys.has('ArrowRight') || input.keys.has('d')){
-            velocity.x = 1;
-        }
-
-        if(input.keys.has('ArrowUp') || input.keys.has('w')){
-            velocity.y = 1;
-        }
-
-        if(input.keys.has('ArrowDown') || input.keys.has('s')){
-            velocity.y = -1;
-        }
-    }
-});
-
+})
 
 
 // === Animate Loop ===
-
-camera.position.set(0, 0, 5);
 
 let last = performance.now();
 
