@@ -1,6 +1,6 @@
 import * as THREE from 'https://esm.sh/three@0.155.0';
 import * as CANNON from 'https://esm.sh/cannon-es';
-import {world, createEntity , addComponent, getAllComponents, getComponent, system, tick} from './frame.js';
+import {createEntity , addComponent, getAllComponents, getComponent, system, tick} from './frame.js';
 import { input, setupInput } from './input.js';
 
 const scene = new THREE.Scene();
@@ -72,7 +72,7 @@ system((dt) => {
         mouse.y = input.mouse.y;
         raycaster.setFromCamera(mouse, camera);
 
-        const intersects = raycaster.intersectObject(scene.children);
+        const intersects = raycaster.intersectObjects(scene.children, true);
         
         for(let i = 0; i < intersects.length; i++ ){
             const intersectedMesh = intersects[i].object;
@@ -86,17 +86,17 @@ system((dt) => {
 
             if(clickedEntity !== null){
                 const physicsComponent = getComponent(clickedEntity, 'Physics');
-                if(physicsComponent && physicsComponent.Body){
+                if(physicsComponent && physicsComponent.body){
                     const pushStrength = 20;
-                    const pushDirection = new CANNON.Vec3();
                     
                     const cameraWorldPos = new THREE.Vector3();
                     camera.getWorldPosition(cameraWorldPos);
                     const pushVec = new THREE.Vector3().subVectors(intersectedMesh.position, cameraWorldPos).normalize();
 
-                    physicsComponent.body.applyImpulse(new CANNON.Vec3(pushVec.x * pushStrength, pushVec.y * pushStrength, pushVec.z * pushStrength),
-                                                                        physicsComponent.body.position,
-                                                                        new CANNON.Vec3().copy(intersects[i].point).vsub(physicsComponent.body.position));
+                   const impulse = new CANNON.Vec3(pushVec.x * pushStrength, pushVec.y * pushStrength, pushVec.z * pushStrength);
+
+                   const contactPoint = new CANNON.Vec3().copy(intersects[i].point).vsub(physicsComponent.body.position);
+                   physicsComponent.body.applyImpulse(impulse, contactPoint);
                     break;
                 }
             }
