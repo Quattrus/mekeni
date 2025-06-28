@@ -47,7 +47,7 @@ function animate(now) {
   renderer.render(scene, camera);
 }
 
-animate();
+requestAnimationFrame(animate);
 
 // Handle resize
 window.addEventListener('resize', () => {
