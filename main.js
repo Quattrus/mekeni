@@ -7,6 +7,7 @@ const renderer = new THREE.WebGLRenderer();
 
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(0x222222);
+renderer.render(scene, camera);
 document.body.appendChild(renderer.domElement);
 
 //Create cube
