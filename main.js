@@ -24,8 +24,10 @@ scene.add(mesh);
 const cube = createEntity();
 addComponent(cube, 'Transform', {mesh});
 addComponent(cube, 'Rotator', {speed: 1.5});
-addComponent(cube, 'Velocity', {x: 0.5, y: 0, z: 0})
+addComponent(cube, 'Velocity', {x: 0.5, y: 0, z: 0});
+addComponent(cube, 'PlayerControlled', true);
 
+// Rotation Control
 system((dt) => {
   for (const [entity, rotator] of getAllComponents('Rotator') || []) {
     const transform = getComponent(entity, 'Transform');
@@ -34,8 +36,11 @@ system((dt) => {
       transform.mesh.rotation.y += rotator.speed * dt;
     }
   }
+});
 
-  for(const [entity, velocity] of getAllComponents('Velocity')){
+//Velocity control
+system((dt) => {
+      for(const [entity, velocity] of getAllComponents('Velocity')){
     const transform = getComponent(entity, 'Transform');
     if(transform?.mesh){
         transform.mesh.position.x += velocity.x * dt;
@@ -43,15 +48,35 @@ system((dt) => {
         transform.mesh.position.z += velocity.z * dt;
     }
   }
-
-if (input.keys.has('a')) {
-    console.log('Key A is pressed');
-  }
-
-  if (input.mouse.clicked) {
-    console.log(`Mouse clicked at (${input.mouse.x}, ${input.mouse.y})`);
-  }
 });
+
+system((dt) => {
+    for(const [entity] of getAllComponents('PlayerControlled')){
+        const velocity = getComponent(entity, 'Velocity');
+        if(!velocity) continue;
+
+        velocity.x = 0;
+        velocity.y = 0;
+
+        if(input.keys.has('ArrowLeft') || input.keys.has('a')){
+            velocity.x = -1;
+        }
+
+        if(input.keys.has('ArrowRight') || input.keys.has('d')){
+            velocity.x = 1;
+        }
+
+        if(input.keys.has('ArrowUp') || input.keys.has('w')){
+            velocity.y = 1;
+        }
+
+        if(input.keys.has('ArrowDown') || input.keys.has('s')){
+            velocity.y = -1;
+        }
+    }
+});
+
+
 
 // === Animate Loop ===
 
