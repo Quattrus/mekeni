@@ -1,5 +1,6 @@
 import * as THREE from 'https://esm.sh/three@0.155.0';
 import {createEntity , addComponent, getAllComponents, getComponent, system, tick} from './frame.js';
+import { input, setupInput } from './input.js';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
@@ -9,6 +10,9 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(0x222222);
 renderer.render(scene, camera);
 document.body.appendChild(renderer.domElement);
+
+setupInput(renderer.domElement);
+
 
 //Create cube
 const geometry = new THREE.BoxGeometry();
@@ -28,6 +32,14 @@ system((dt) => {
       transform.mesh.rotation.x += rotator.speed * dt;
       transform.mesh.rotation.y += rotator.speed * dt;
     }
+  }
+
+if (input.keys.has('a')) {
+    console.log('Key A is pressed');
+  }
+
+  if (input.mouse.clicked) {
+    console.log(`Mouse clicked at (${input.mouse.x}, ${input.mouse.y})`);
   }
 });
 
