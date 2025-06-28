@@ -1,11 +1,13 @@
 import * as THREE from 'https://esm.sh/three@0.155.0';
 import * as CANNON from 'https://esm.sh/cannon-es';
-import {createEntity , addComponent, getAllComponents, getComponent, system, tick} from './frame.js';
+import {world, createEntity , addComponent, getAllComponents, getComponent, system, tick} from './frame.js';
 import { input, setupInput } from './input.js';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer();
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
 
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(0x222222);
@@ -60,6 +62,46 @@ system((dt) =>{
         if (input.keys.has('d') || input.keys.has('ArrowRight')) physics.body.velocity.x = force;
         if(input.keys.has('w') || input.keys.has('ArrowUp')) physics.body.velocity.z = -force;
         if(input.keys.has('s') || input.keys.has('ArrowDown')) physics.body.velocity.z = force;
+        
+    }
+})
+
+system((dt) => {
+    if(input.mouse.justClicked){
+        mouse.x = input.mouse.x;
+        mouse.y = input.mouse.y;
+        raycaster.setFromCamera(mouse, camera);
+
+        const intersects = raycaster.intersectObject(scene.children);
+        
+        for(let i = 0; i < intersects.length; i++ ){
+            const intersectedMesh = intersects[i].object;
+            let clickedEntity = null;
+            for(const[entity, transformData] of getAllComponents('Transform')){
+                if(transformData.mesh == intersectedMesh){
+                    clickedEntity = entity;
+                    break;
+                }
+            }
+
+            if(clickedEntity !== null){
+                const physicsComponent = getComponent(clickedEntity, 'Physics');
+                if(physicsComponent && physicsComponent.Body){
+                    const pushStrength = 20;
+                    const pushDirection = new CANNON.Vec3();
+                    
+                    const cameraWorldPos = new THREE.Vector3();
+                    camera.getWorldPosition(cameraWorldPos);
+                    const pushVec = new THREE.Vector3().subVectors(intersectedMesh.position, cameraWorldPos).normalize();
+
+                    physicsComponent.body.applyImpulse(new CANNON.Vec3(pushVec.x * pushStrength, pushVec.y * pushStrength, pushVec.z * pushStrength),
+                                                                        physicsComponent.body.position,
+                                                                        new CANNON.Vec3().copy(intersects[i].point).vsub(physicsComponent.body.position));
+                    break;
+                }
+            }
+        }
+        input.mouse.justClicked = false;
     }
 })
 
