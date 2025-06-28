@@ -27,7 +27,6 @@ system((dt) => {
     if (transform?.mesh) {
       transform.mesh.rotation.x += rotator.speed * dt;
       transform.mesh.rotation.y += rotator.speed * dt;
-      console.log(transform.mesh.rotation);
     }
   }
 });
@@ -35,8 +34,6 @@ system((dt) => {
 // === Animate Loop ===
 
 camera.position.set(0, 0, 5);
-console.log('Camera Pos:', camera.position);
-console.log('Mesh Pos:', mesh.position);
 
 let last = performance.now();
 
