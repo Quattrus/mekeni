@@ -6,6 +6,7 @@ const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHei
 const renderer = new THREE.WebGLRenderer();
 
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0x222222);
 document.body.appendChild(renderer.domElement);
 
 //Create cube
@@ -25,13 +26,17 @@ system((dt) => {
     if (transform?.mesh) {
       transform.mesh.rotation.x += rotator.speed * dt;
       transform.mesh.rotation.y += rotator.speed * dt;
+      console.log(transform.mesh.rotation);
     }
   }
 });
 
 // === Animate Loop ===
 
-camera.position.z = 3;
+camera.position.set(0, 0, 5);
+console.log('Camera Pos:', camera.position);
+console.log('Mesh Pos:', mesh.position);
+
 let last = performance.now();
 
 function animate(now) {
