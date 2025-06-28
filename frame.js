@@ -6,6 +6,12 @@ export const world = {
 
 let nextEntityId = 0;
 
+export function createEntity() {
+  const id = nextEntityId++;
+  world.entities.add(id);
+  return id;
+}
+
 export function addComponent(entity, component, data){
     if(!world.components.has(component)){
         world.components.set(component, new Map());
