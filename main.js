@@ -1,5 +1,5 @@
 import * as THREE from 'https://esm.sh/three@0.155.0';
-import {createEntity , addComponent, getComponent, system, tick} from './frame.js';
+import {createEntity , addComponent, getAllComponents, getComponent, system, tick} from './frame.js';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
@@ -20,7 +20,7 @@ addComponent(cube, 'Transform', {mesh});
 addComponent(cube, 'Rotator', {speed: 1.5});
 
 system((dt) => {
-  for (const [entity, rotator] of world.components.get('Rotator') || []) {
+  for (const [entity, rotator] of getAllComponents('Rotator') || []) {
     const transform = getComponent(entity, 'Transform');
     if (transform?.mesh) {
       transform.mesh.rotation.x += rotator.speed * dt;

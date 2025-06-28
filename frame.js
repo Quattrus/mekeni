@@ -20,6 +20,10 @@ export function addComponent(entity, component, data){
     world.components.get(component).set(entity, data);
 }
 
+export function getAllComponents(component){
+    return world.components.get(component) || new Map();
+}
+
 export function getComponent(entity, component){
     return world.components.get(component)?.get(entity);
 }
