@@ -67,54 +67,78 @@ system((dt) =>{
 })
 
 system((dt) => {
-    if(input.mouse.justClicked){
-    mouse.x = (input.mouse.x * 2) - 1;
-    mouse.y = -((input.mouse.y * 2) - 1);
-        raycaster.setFromCamera(mouse, camera);
+  if (!input.mouse.justClicked) return;
+  console.log('Click detected! Raw mouse coords:', input.mouse.x, input.mouse.y);
 
-        const intersects = raycaster.intersectObjects(scene.children, true);
-        
-        for(let i = 0; i < intersects.length; i++ ){
-            const intersectedMesh = intersects[i].object;
-            let clickedEntity = null;
-            for(const[entity, transformData] of getAllComponents('Transform')){
-                if(transformData.mesh == intersectedMesh){
-                    clickedEntity = entity;
-                    break;
-                }
-            }
+  mouse.x = (input.mouse.x * 2) - 1;
+  mouse.y = -((input.mouse.y * 2) - 1);
+  console.log('Mapped to NDC:', mouse.x, mouse.y);
 
-            if(clickedEntity !== null){
-                const physicsComponent = getComponent(clickedEntity, 'Physics');
-                if(physicsComponent && physicsComponent.body){
-                    const pushStrength = 20;
-                    
-                    const cameraWorldPos = new THREE.Vector3();
-                    camera.getWorldPosition(cameraWorldPos);
-                    const pushVec = new THREE.Vector3().subVectors(intersectedMesh.position, cameraWorldPos).normalize();
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(scene.children, true);
+  console.log('Raycaster found', intersects.length, 'intersections');
 
-                   const impulse = new CANNON.Vec3(pushVec.x * pushStrength, pushVec.y * pushStrength, pushVec.z * pushStrength);
+  for (let i = 0; i < intersects.length; i++) {
+    const m = intersects[i].object;
+    console.log(`hit mesh:`, m.name || m.id);
 
-                   const contactPoint = new CANNON.Vec3().copy(intersects[i].point).vsub(physicsComponent.body.position);
-                   physicsComponent.body.applyImpulse(impulse, contactPoint);
-                    break;
-                }
-            }
-        }
-        input.mouse.justClicked = false;
+    // find the ECS entity
+    let clickedEntity = null;
+    for (const [eid, t] of getAllComponents('Transform')) {
+      if (t.mesh === m) { clickedEntity = eid; break; }
     }
-})
+    console.log('clickedEntity:', clickedEntity);
 
-//PhysicsSystem 
+    if (clickedEntity !== null) {
+      const physC = getComponent(clickedEntity, 'Physics');
+      console.log('physics component:', physC);
+      if (physC && physC.body) {
+        const pushStrength = 20;
+        // build impulse vector
+        const camPos = new THREE.Vector3();
+        camera.getWorldPosition(camPos);
+        const pushDir = new THREE.Vector3()
+          .subVectors(m.position, camPos)
+          .normalize();
+        const impulse = new CANNON.Vec3(
+          pushDir.x * pushStrength,
+          pushDir.y * pushStrength,
+          pushDir.z * pushStrength
+        );
+        // contact point relative to body
+        const contactPoint = new CANNON.Vec3()
+          .copy(intersects[i].point)
+          .vsub(physC.body.position);
+
+        console.log('impulse:', impulse);
+        console.log('contactPoint:', contactPoint);
+        console.log('velocity before:', physC.body.velocity.clone());
+
+        physC.body.applyImpulse(impulse, contactPoint);
+
+        console.log('velocity after:', physC.body.velocity.clone());
+      } else {
+        console.warn('No physics.body found on entity', clickedEntity);
+      }
+      break; // only first hit
+    }
+  }
+
+  input.mouse.justClicked = false;
+});
+
+
 system((dt) => {
-    physWorld.step(1/60, dt, 3);
-    for(const [entity, physics] of getAllComponents('Physics')){
-        const transform = getComponent(entity, 'Transform');
-        if(!transform?.mesh)  continue;
-        transform.mesh.position.copy(physics.body.position);
-        transform.mesh.quaternion.copy(physics.body.quaternion);
+  physWorld.step(1/60, dt, 3);
+  for (const [eid, phys] of getAllComponents('Physics')) {
+    console.log(`Entity ${eid} velocity:`, phys.body.velocity);
+    const t = getComponent(eid, 'Transform');
+    if (t?.mesh) {
+      t.mesh.position.copy(phys.body.position);
+      t.mesh.quaternion.copy(phys.body.quaternion);
     }
-})
+  }
+});
 
 
 // === Animate Loop ===
