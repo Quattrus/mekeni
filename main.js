@@ -68,8 +68,8 @@ system((dt) =>{
 
 system((dt) => {
     if(input.mouse.justClicked){
-        mouse.x = input.mouse.x;
-        mouse.y = input.mouse.y;
+    mouse.x = (input.mouse.x * 2) - 1;
+    mouse.y = -((input.mouse.y * 2) - 1);
         raycaster.setFromCamera(mouse, camera);
 
         const intersects = raycaster.intersectObjects(scene.children, true);
