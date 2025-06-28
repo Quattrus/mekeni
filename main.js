@@ -24,6 +24,7 @@ scene.add(mesh);
 const cube = createEntity();
 addComponent(cube, 'Transform', {mesh});
 addComponent(cube, 'Rotator', {speed: 1.5});
+addComponent(cube, 'Velocity', {x: 0.5, y: 0, z: 0})
 
 system((dt) => {
   for (const [entity, rotator] of getAllComponents('Rotator') || []) {
@@ -31,6 +32,15 @@ system((dt) => {
     if (transform?.mesh) {
       transform.mesh.rotation.x += rotator.speed * dt;
       transform.mesh.rotation.y += rotator.speed * dt;
+    }
+  }
+
+  for(const [entity, velocity] of getAllComponents('Velocity')){
+    const transform = getComponent(entity, 'Transform');
+    if(transform?.mesh){
+        transform.mesh.position.x += velocity.x * dt;
+        transform.mesh.position.y += velocity.y * dt;
+        transform.mesh.position.z += velocity.z * dt;
     }
   }
 
