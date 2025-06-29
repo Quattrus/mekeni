@@ -146,60 +146,6 @@ system((dt) =>{
     }
 })
 
-system((dt) => {
-  if (!input.mouse.justClicked) return;
-  console.log('Click detected! Raw mouse coords:', input.mouse.x, input.mouse.y);
-
-  mouse.x = (input.mouse.x * 2) - 1;
-  mouse.y = -((input.mouse.y * 2) - 1);
-  console.log('Mapped to NDC:', mouse.x, mouse.y);
-
-  raycaster.setFromCamera(mouse, camera);
-  const intersects = raycaster.intersectObjects(scene.children, true);
-  console.log('Raycaster found', intersects.length, 'intersections');
-
-  for (let i = 0; i < intersects.length; i++) {
-    const m = intersects[i].object;
-    console.log(`hit mesh:`, m.name || m.id);
-
-    // find the ECS entity
-    let clickedEntity = null;
-    for (const [eid, t] of getAllComponents('Transform')) {
-      if (t.mesh === m) { clickedEntity = eid; break; }
-    }
-    console.log('clickedEntity:', clickedEntity);
-
-    if (clickedEntity !== null) {
-      const physC = getComponent(clickedEntity, 'Physics');
-      if (physC && physC.body) {
-        const pushStrength = 20;
-        // build impulse vector
-        const camPos = new THREE.Vector3();
-        camera.getWorldPosition(camPos);
-        const pushDir = new THREE.Vector3()
-          .subVectors(m.position, camPos)
-          .normalize();
-        const impulse = new CANNON.Vec3(
-          pushDir.x * pushStrength,
-          pushDir.y * pushStrength,
-          pushDir.z * pushStrength
-        );
-        // contact point relative to body
-        const contactPoint = new CANNON.Vec3()
-          .copy(intersects[i].point)
-          .vsub(physC.body.position);
-
-        physC.body.applyImpulse(impulse, contactPoint);
-
-      } else {
-        console.warn('No physics.body found on entity', clickedEntity);
-      }
-      break; // only first hit
-    }
-  }
-
-  input.mouse.justClicked = false;
-});
 
 
 system((dt) => {
