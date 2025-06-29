@@ -50,6 +50,86 @@ physWorld.addBody(body);
 
 addComponent(cube, 'Physics', {body});
 
+const dragState = {
+    eid: null,
+    offset: new THREE.Vector3(),
+    plane: new THREE.Plane(),
+    intersectPoint: new THREE.Vector3()
+};
+
+const canvas = renderer.domElement;
+canvas.addEventListener('pointerdown', onPointerDown);
+canvas.addEventListener('pointermove', onPointerMove);
+canvas.addEventListener('pointerup', onPointerUp);
+
+function getMouseNDC(event){
+  return {
+    x: (event.clientX / window.innerWidth) * 2 - 1,
+    y: - (event.clientY / window.innerHeight) * 2 + 1
+  };
+}
+
+function onPointerDown(event){
+  const ndc = getMouseNDC(event);
+  mouse.x = ndc.x; mouse.y = ndc.y;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(scene.children, true);
+  if(!hits.length) return;
+
+  const meshHit = hits[0].object;
+
+    let clickedEid = null;
+  for(const [eid, t] of getAllComponents('Transform')){
+    if(t.mesh === meshHit){
+      clickedEid = eid;
+      break;
+    }
+  }
+
+  if(clickedEid === null) return;
+
+    // start dragging
+  dragState.eid = clickedEid;
+  const phys = getComponent(clickedEid, 'Physics').body;
+
+    phys.type = CANNON.Body.KINEMATIC;
+  phys.updateMassProperties();
+  phys.velocity.set(0,0,0);
+  phys.angularVelocity.set(0,0,0);
+
+ const hitPoint = hits[0].point;
+  camera.getWorldDirection(dragState.plane.normal);
+  dragState.plane.constant = -dragState.plane.normal.dot(hitPoint);
+
+  dragState.offset.copy(phys.position).sub(hitPoint);
+}
+
+
+function onPointerMove(event){
+  if(dragState.eid === null) return;
+  const ndc = getMouseNDC(event);
+  mouse.x = ndc.x; mouse.y = ndc.y;
+  raycaster.setFromCamera(mouse, camera);
+  // intersect ray with plane
+  if(!raycaster.ray.intersectPlane(dragState.plane, dragState.intersectPoint)) return;
+
+  // move the body
+  const phys = getComponent(dragState.eid, 'Physics').body;
+  const targetPos = dragState.intersectPoint.clone().add(dragState.offset);
+  phys.position.copy(targetPos);
+  phys.velocity.set(0,0,0); // zero any leftover vel
+}
+
+function onPointerUp(){
+  if(dragState.eid === null) return;
+  const phys = getComponent(dragState.eid, 'Physics').body;
+  // back to dynamic
+  phys.type = CANNON.Body.DYNAMIC;
+  phys.updateMassProperties();
+  // optionally, you could set phys.velocity to some value
+  dragState.eid = null;
+}
+
 //Player input
 system((dt) =>{
     for(const[entity] of getAllComponents('PlayerControlled')){
@@ -91,7 +171,6 @@ system((dt) => {
 
     if (clickedEntity !== null) {
       const physC = getComponent(clickedEntity, 'Physics');
-      console.log('physics component:', physC);
       if (physC && physC.body) {
         const pushStrength = 20;
         // build impulse vector
@@ -110,13 +189,8 @@ system((dt) => {
           .copy(intersects[i].point)
           .vsub(physC.body.position);
 
-        console.log('impulse:', impulse);
-        console.log('contactPoint:', contactPoint);
-        console.log('velocity before:', physC.body.velocity.clone());
-
         physC.body.applyImpulse(impulse, contactPoint);
 
-        console.log('velocity after:', physC.body.velocity.clone());
       } else {
         console.warn('No physics.body found on entity', clickedEntity);
       }
@@ -131,7 +205,6 @@ system((dt) => {
 system((dt) => {
   physWorld.step(1/60, dt, 3);
   for (const [eid, phys] of getAllComponents('Physics')) {
-    console.log(`Entity ${eid} velocity:`, phys.body.velocity);
     const t = getComponent(eid, 'Transform');
     if (t?.mesh) {
       t.mesh.position.copy(phys.body.position);
