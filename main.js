@@ -1,5 +1,6 @@
 import * as THREE from 'https://esm.sh/three@0.155.0';
 import * as CANNON from 'https://esm.sh/cannon-es';
+import { PointerLockControls } from 'https://esm.sh/three@0.155.0/examples/jsm/controls/PointerLockControls.js';
 import {createEntity , addComponent, getAllComponents, getComponent, system, tick} from './frame.js';
 import { input, setupInput } from './input.js';
 import { VoxelChunk } from './voxelChunk.js';
@@ -38,7 +39,7 @@ scene.add(chunkMesh);
 addComponent(chunkEnt, 'Transform', { mesh: chunkMesh });
 addComponent(chunkEnt, 'VoxelData', { chunk });
 
-const controls = new THREE.PointerLockControls(camera, renderer.domElement);
+const controls = new PointerLockControls(camera, renderer.domElement);
 document.body.addEventListener('click', () => controls.lock());
 scene.add(new THREE.HemisphereLight(0xbbbbff, 0x444422, 1));
 
