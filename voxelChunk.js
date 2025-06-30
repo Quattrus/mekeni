@@ -1,5 +1,6 @@
 import * as THREE from 'https://esm.sh/three@0.155.0';
-import SimplexNoise from 'https://esm.sh/simplex-noise';
+import SimplexNoise from 'https://cdn.skypack.dev/simplex-noise';
+
 
 export class VoxelChunk {
   constructor(size = 16, maxHeight = 8, noiseScale = 20, seed = 'mekeni') {
