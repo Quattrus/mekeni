@@ -46,10 +46,12 @@ scene.add(new THREE.HemisphereLight(0xbbbbff, 0x444422, 1));
 system((dt) => {
   const speed = 5;
   let move = new THREE.Vector3();
-  if (input.keys.has('w')) move.z -= 1;
-  if (input.keys.has('s')) move.z += 1;
+  if (input.keys.has('w')) move.z += 1;
+  if (input.keys.has('s')) move.z -= 1;
   if (input.keys.has('a')) move.x -= 1;
   if (input.keys.has('d')) move.x += 1;
+  if(input.keys.has('r')) move.y += 1;
+  if(input.keys.has('f')) move.y -= 1;
   move.normalize().multiplyScalar(speed * dt);
   controls.moveRight(move.x);
   controls.moveForward(move.z);

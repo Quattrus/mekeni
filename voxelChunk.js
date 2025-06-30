@@ -1,21 +1,28 @@
 import * as THREE from 'https://esm.sh/three@0.155.0';
+import SimplexNoise from 'https://esm.sh/simplex-noise';
 
 export class VoxelChunk {
-  constructor(size = 16, height = 4) {
+  constructor(size = 16, maxHeight = 8, noiseScale = 20, seed = 'mekeni') {
     this.size = size;
-    this.height = height;
+    this.maxHeight = maxHeight;
+    this.noiseScale = noiseScale;
+    this.noise = new SimplexNoise(seed);
     // 1D array: x + y*size + z*size*size
     this.data = new Uint8Array(size * height * size);
     this.mesh = null;
     this.material = new THREE.MeshLambertMaterial({ vertexColors: true });
-    this._initFlatGround();
+    this._initTerrain();
   }
 
-  _initFlatGround() {
+  _initTerrain() {
+    //Fill data based on 2d noise heightmap
     for (let z = 0; z < this.size; z++) {
       for (let x = 0; x < this.size; x++) {
-        const y = Math.floor(this.height / 2);
-        this.setBlock(x, y, z, 1);
+        const n = this.noise.noise2D(x / this.noiseScale, z / this.noiseScale);
+        const h = Math.floor(((n + 1) / 2) * (this.maxHeight - 1)) + 1;
+        for(let y = 0; y < h; y++){
+            this.setBlock(x,y,z,1);
+        }
       }
     }
   }
