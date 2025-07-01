@@ -1,13 +1,13 @@
 import * as THREE from 'https://esm.sh/three@0.155.0';
-import SimplexNoise from 'https://cdn.skypack.dev/simplex-noise';
+import { SimplexNoise } from 'https://cdn.jsdelivr.net/npm/three@0.155.0/examples/jsm/math/SimplexNoise.js';
 
 
 export class VoxelChunk {
-  constructor(size = 16, maxHeight = 8, noiseScale = 20, seed = 'mekeni') {
+  constructor(size = 16, maxHeight = 8, noiseScale = 20) {
     this.size = size;
     this.maxHeight = maxHeight;
     this.noiseScale = noiseScale;
-    this.noise = new SimplexNoise(seed);
+    this.noise = new  SimplexNoise();
     // 1D array: x + y*size + z*size*size
     this.data = new Uint8Array(size * height * size);
     this.mesh = null;
