@@ -9,7 +9,7 @@ export class VoxelChunk {
     this.noiseScale = noiseScale;
     this.noise = new  SimplexNoise();
     // 1D array: x + y*size + z*size*size
-    this.data = new Uint8Array(size * height * size);
+    this.data = new Uint8Array(size * maxHeight * size);
     this.mesh = null;
     this.material = new THREE.MeshLambertMaterial({ vertexColors: true });
     this._initTerrain();
