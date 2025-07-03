@@ -1,5 +1,5 @@
 import * as THREE from 'https://esm.sh/three@0.155.0';
-import { SimplexNoise } from 'https://cdn.skypack.dev/pin/simplex-noise@v4.0.3-hEp2IFDgxLtnNiD8W4jo/mode=imports/optimized/simplex-noise.js';
+import { SimplexNoise } from 'https://cdn.skypack.dev/simplex-noise';
 
 
 export class VoxelChunk {
