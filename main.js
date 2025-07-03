@@ -32,7 +32,7 @@ physWorld.addBody(groundBody);
 
 
 const chunkEnt = createEntity();
-const chunk = new VoxelChunk(16, 8);
+const chunk = new VoxelChunk(16,  8);
 const chunkMesh = chunk.buildMesh();
 
 scene.add(chunkMesh);

@@ -1,5 +1,5 @@
 import * as THREE from 'https://esm.sh/three@0.155.0';
-import { SimplexNoise } from 'https://cdn.jsdelivr.net/npm/three@0.155.0/examples/jsm/math/SimplexNoise.js';
+import { SimplexNoise } from 'https://cdn.skypack.dev/pin/simplex-noise@v4.0.3-hEp2IFDgxLtnNiD8W4jo/mode=imports/optimized/simplex-noise.js';
 
 
 export class VoxelChunk {
@@ -19,7 +19,7 @@ export class VoxelChunk {
     //Fill data based on 2d noise heightmap
     for (let z = 0; z < this.size; z++) {
       for (let x = 0; x < this.size; x++) {
-        const n = this.noise.noise2D(x / this.noiseScale, z / this.noiseScale);
+        const n = this.noise.noise(x / this.noiseScale, z / this.noiseScale);
         const h = Math.floor(((n + 1) / 2) * (this.maxHeight - 1)) + 1;
         for(let y = 0; y < h; y++){
             this.setBlock(x,y,z,1);
