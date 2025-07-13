@@ -37,8 +37,12 @@ document.body.addEventListener('click', () => controls.lock());
 // Add the control object to the scene and set initial position
 scene.add(controls.getObject());
 controls.getObject().position.set(10, 10, 10);
-// Add light to the scene
-scene.add(new THREE.HemisphereLight(0xbbbbff, 0x444422, 1));
+// Add better lighting to the scene
+scene.add(new THREE.HemisphereLight(0x87CEEB, 0x362d1d, 0.8)); // Sky blue to earth brown
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
+directionalLight.position.set(50, 100, 50);
+directionalLight.castShadow = true;
+scene.add(directionalLight);
 
 system((dt) => {
   const speed = 5;
