@@ -4,12 +4,14 @@ import { PointerLockControls } from 'https://esm.sh/three@0.155.0/examples/jsm/c
 import {createEntity , addComponent, getAllComponents, getComponent, system, tick} from './frame.js';
 import { input, setupInput } from './input.js';
 import { VoxelChunk } from './voxelChunk.js';
+import { ChunkManager } from './chunkManager.js';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer();
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
+const chunkManager = new ChunkManager(scene);
 
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(0x222222);
@@ -17,8 +19,6 @@ renderer.render(scene, camera);
 document.body.appendChild(renderer.domElement);
 
 setupInput(renderer.domElement);
-camera.position.set(10, 10, 10);
-camera.lookAt(8, 4, 8);
 
 //Cannon-es physworld
 const physWorld = new CANNON.World({
@@ -31,17 +31,13 @@ groundBody.addShape(new CANNON.Plane());
 groundBody.quaternion.setFromEuler(-Math.PI/2, 0, 0);
 physWorld.addBody(groundBody);
 
-
-const chunkEnt = createEntity();
-const chunk = new VoxelChunk(16,  8);
-const chunkMesh = chunk.buildMesh();
-
-scene.add(chunkMesh);
-addComponent(chunkEnt, 'Transform', { mesh: chunkMesh });
-addComponent(chunkEnt, 'VoxelData', { chunk });
-
+// Setup pointer lock controls
 const controls = new PointerLockControls(camera, renderer.domElement);
 document.body.addEventListener('click', () => controls.lock());
+// Add the control object to the scene and set initial position
+scene.add(controls.getObject());
+controls.getObject().position.set(10, 10, 10);
+// Add light to the scene
 scene.add(new THREE.HemisphereLight(0xbbbbff, 0x444422, 1));
 
 system((dt) => {
@@ -56,6 +52,12 @@ system((dt) => {
   move.normalize().multiplyScalar(speed * dt);
   controls.moveRight(move.x);
   controls.moveForward(move.z);
+  // Apply vertical (up/down) movement on the control object instead of the camera
+  controls.getObject().position.y += move.y;
+  
+  // Load/generate chunks around the player
+  const playerPos = controls.getObject().position;
+  chunkManager.loadChunksAround(playerPos.x, playerPos.z);
 });
 
 system((dt) => {
