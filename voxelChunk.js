@@ -1,5 +1,5 @@
 import * as THREE from 'https://esm.sh/three@0.155.0';
-import { SimplexNoise } from 'https://esm.sh/simplex-noise@2.4.0';
+import { createNoise2D } from 'https://esm.sh/simplex-noise@4.0.1';
 
 
 export class VoxelChunk {
@@ -7,7 +7,7 @@ export class VoxelChunk {
     this.size = size;
     this.maxHeight = maxHeight;
     this.noiseScale = noiseScale;
-    this.noise = new  SimplexNoise();
+    this.noise = createNoise2D();
     // 1D array: x + y*size + z*size*size
     this.data = new Uint8Array(size * maxHeight * size);
     this.mesh = null;
@@ -19,7 +19,7 @@ export class VoxelChunk {
     //Fill data based on 2d noise heightmap
     for (let z = 0; z < this.size; z++) {
       for (let x = 0; x < this.size; x++) {
-        const n = this.noise.noise(x / this.noiseScale, z / this.noiseScale);
+        const n = this.noise(x / this.noiseScale, z / this.noiseScale);
         const h = Math.floor(((n + 1) / 2) * (this.maxHeight - 1)) + 1;
         for(let y = 0; y < h; y++){
             this.setBlock(x,y,z,1);
@@ -35,7 +35,7 @@ export class VoxelChunk {
   getBlock(x, y, z) {
     if (
       x < 0 || x >= this.size ||
-      y < 0 || y >= this.height ||
+      y < 0 || y >= this.maxHeight ||
       z < 0 || z >= this.size
     ) return 0;
     return this.data[x + (y * this.size) + (z * this.size * this.size)];
@@ -59,7 +59,7 @@ export class VoxelChunk {
       { dir:[ 0, 0,-1], corners:[[0,1,0],[1,1,0],[1,0,0],[0,0,0]] },
     ];
 
-    for (let y = 0; y < this.height; y++) {
+    for (let y = 0; y < this.maxHeight; y++) {
       for (let z = 0; z < this.size; z++) {
         for (let x = 0; x < this.size; x++) {
           if (!this.getBlock(x,y,z)) continue;
@@ -68,7 +68,7 @@ export class VoxelChunk {
             if (this.getBlock(nx,ny,nz) === 0) {
               // emit a face
               const normal = new THREE.Vector3(...f.dir);
-              c.setHSL((y/this.height)*0.3 + 0.1, 0.6, 0.5);
+              c.setHSL((y/this.maxHeight)*0.3 + 0.1, 0.6, 0.5);
               for (let i = 0; i < 4; i++) {
                 const corner = f.corners[i];
                 vertices.push(x + corner[0], y + corner[1], z + corner[2]);

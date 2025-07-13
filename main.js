@@ -1,6 +1,6 @@
 import * as THREE from 'https://esm.sh/three@0.155.0';
 import * as CANNON from 'https://esm.sh/cannon-es';
-import { PointerLockControls } from 'https://cdn.skypack.dev/simplex-noise';
+import { PointerLockControls } from 'https://esm.sh/three@0.155.0/examples/jsm/controls/PointerLockControls.js';
 import {createEntity , addComponent, getAllComponents, getComponent, system, tick} from './frame.js';
 import { input, setupInput } from './input.js';
 import { VoxelChunk } from './voxelChunk.js';
@@ -17,7 +17,8 @@ renderer.render(scene, camera);
 document.body.appendChild(renderer.domElement);
 
 setupInput(renderer.domElement);
-camera.position.set(0, 0, 5);
+camera.position.set(10, 10, 10);
+camera.lookAt(8, 4, 8);
 
 //Cannon-es physworld
 const physWorld = new CANNON.World({
