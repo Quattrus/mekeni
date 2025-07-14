@@ -18,6 +18,40 @@ renderer.setClearColor(0x222222);
 renderer.render(scene, camera);
 document.body.appendChild(renderer.domElement);
 
+// Add controls instruction overlay
+const controlsDiv = document.createElement('div');
+controlsDiv.className = 'controls-overlay';
+controlsDiv.style.pointerEvents = 'none';
+controlsDiv.innerHTML = `
+  <div style="
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    z-index: 1000;
+    max-width: 250px;
+  ">
+    <h3 style="margin: 0 0 10px 0; color: #4CAF50;">🎮 Controls</h3>
+    <div><strong>Click anywhere</strong> to start exploring</div>
+    <div style="margin-top: 8px;">
+      <div><strong>W A S D</strong> - Move around</div>
+      <div><strong>R</strong> - Fly up</div>
+      <div><strong>F</strong> - Fly down</div>
+      <div><strong>Mouse</strong> - Look around</div>
+    </div>
+    <div style="margin-top: 10px; font-size: 12px; color: #aaa;">
+      🏔️ Explore mountains and caves!<br>
+      💡 Fly underground to find caves
+    </div>
+  </div>
+`;
+document.body.appendChild(controlsDiv);
+
 setupInput(renderer.domElement);
 
 //Cannon-es physworld
