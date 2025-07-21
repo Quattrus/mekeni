@@ -1,5 +1,5 @@
 import * as THREE from 'https://esm.sh/three@0.155.0';
-import { createNoise2D } from 'https://esm.sh/simplex-noise@4.0.1';
+import { createNoise2D, createNoise3D } from 'https://esm.sh/simplex-noise@4.0.1';
 
 
 export class VoxelChunk {
@@ -10,6 +10,7 @@ export class VoxelChunk {
     this.chunkZ = chunkZ;
     this.elevationService = elevationService;
     this.noise = createNoise2D();
+    this.caveNoise = createNoise3D();
     // 1D array: x + y*size + z*size*size
     this.data = new Uint8Array(size * maxHeight * size);
     this.mesh = null;
@@ -38,22 +39,50 @@ export class VoxelChunk {
         
         // Fill blocks up to the elevation height, but consider caves
         for(let y = 0; y < elevation; y++){
-          if (this.elevationService && this.elevationService.shouldBlockExist) {
-            // Use cave system
-            if (this.elevationService.shouldBlockExist(this.chunkX, this.chunkZ, x, y, z, elevation)) {
+          let isCave = false;
+          // Carve caves using 3D noise (horizontal tunnels)
+          const caveValue = this.caveNoise(
+            (this.chunkX * this.size + x) / 16,
+            y / 8,
+            (this.chunkZ * this.size + z) / 16
+          );
+          if (caveValue > 0.5) isCave = true; // Adjust threshold for more/less caves
+
+          if (!isCave) {
+            if (this.elevationService && this.elevationService.shouldBlockExist) {
+              // Use cave system
+              if (this.elevationService.shouldBlockExist(this.chunkX, this.chunkZ, x, y, z, elevation)) {
+                this.setBlock(x, y, z, 1);
+              }
+            } else {
+              // No cave system, fill normally
               this.setBlock(x, y, z, 1);
             }
-          } else {
-            // No cave system, fill normally
-            this.setBlock(x, y, z, 1);
           }
         }
       }
     }
   }
 
+  // Minecraft-like multi-octave noise for more interesting terrain
   _getNoiseHeight(x, z) {
-    const n = this.noise((this.chunkX * this.size + x) / 20, (this.chunkZ * this.size + z) / 20);
+    let total = 0;
+    let frequency = 1 / 16; // Lower = larger features
+    let amplitude = 1;
+    let maxValue = 0;
+    const octaves = 4;
+    const persistence = 0.5;
+    for (let o = 0; o < octaves; o++) {
+      const nx = (this.chunkX * this.size + x) * frequency;
+      const nz = (this.chunkZ * this.size + z) * frequency;
+      total += this.noise(nx, nz) * amplitude;
+      maxValue += amplitude;
+      amplitude *= persistence;
+      frequency *= 2;
+    }
+    // Normalize to [0,1]
+    const n = total / maxValue;
+    // Map to block height
     return Math.floor(((n + 1) / 2) * (this.maxHeight - 1)) + 1;
   }
 

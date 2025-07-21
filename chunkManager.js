@@ -63,4 +63,13 @@ export class ChunkManager {
         }
     }
 
+    reset() {
+        // remove all existing meshes
+        for(const {mesh} of this.chunks.values()) {
+            this.scene.remove(mesh);
+        }
+
+        this.chunks.clear();
+    }
+
 }

@@ -1,14 +1,18 @@
 {
-  "name": "mekeni-voxel-game",
-  "version": "1.0.0",
-  "description": "A 3D voxel game using Three.js and an ECS framework",
+  "name": "mekeni-game-engine",
+  "version": "2.0.0",
+  "description": "A general-purpose 3D game engine using Three.js and ECS architecture",
   "main": "main.js",
   "scripts": {
     "start": "python -m http.server 8000",
-    "serve": "python -m http.server 8000"
+    "serve": "python -m http.server 8000",
+    "dev": "python -m http.server 8000"
   },
   "type": "module",
-  "keywords": ["threejs", "voxel", "game", "ecs"],
+  "keywords": ["game-engine", "threejs", "ecs", "3d", "webgl"],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "engines": {
+    "node": ">=14.0.0"
+  }
 }
