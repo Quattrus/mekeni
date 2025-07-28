@@ -4,6 +4,7 @@ import { World } from './src/core/World.js';
 import { RenderingSystem } from './src/systems/RenderingSystem.js';
 import { PhysicsSystem } from './src/systems/PhysicsSystem.js';
 import { InputSystem } from './src/systems/InputSystem.js';
+import { MobileInputSystem } from './src/systems/MobileInputSystem.js';
 import { Transform } from './src/components/Transform.js';
 import { MeshRenderer } from './src/components/MeshRenderer.js';
 import { Physics } from './src/components/Physics.js';
@@ -89,10 +90,12 @@ class Game {
     setupSystems() {
         // Add systems in order of execution
         const inputSystem = new InputSystem(this.canvas);
+        const mobileInputSystem = new MobileInputSystem(this.canvas);
         const physicsSystem = new PhysicsSystem();
         const renderingSystem = new RenderingSystem(this.scene, this.camera, this.renderer);
 
         this.engine.addSystem(inputSystem);
+        this.engine.addSystem(mobileInputSystem);
         this.engine.addSystem(physicsSystem);
         this.engine.addSystem(renderingSystem);
     }
@@ -206,6 +209,8 @@ class Game {
             priority: 0,
             execute: (world, deltaTime) => {
                 const entities = world.query('Transform', 'Input', 'Physics');
+                const mobileInputSystem = this.engine.getSystem('MobileInputSystem');
+                const mobileInputs = mobileInputSystem.getInputs();
                 
                 for (const entity of entities) {
                     const transform = entity.Transform;
@@ -221,8 +226,8 @@ class Game {
                     const moveSpeed = physics.isGrounded ? groundMoveSpeed : airMoveSpeed;
                     const maxSpeed = physics.isGrounded ? maxGroundSpeed : maxAirSpeed;
                     const actions = input.getActiveActions();
-                    
-                    // Apply movement forces
+
+                    // Apply keyboard movement forces
                     for (const action of actions) {
                         switch (action) {
                             case 'move_forward':
@@ -251,6 +256,23 @@ class Game {
                                 physics.jump();
                                 break;
                         }
+                    }
+
+                    // Apply mobile movement forces
+                    if (mobileInputs.pan.x !== 0 || mobileInputs.pan.y !== 0) {
+                        const panX = mobileInputs.pan.x / 20;
+                        const panY = mobileInputs.pan.y / 20;
+
+                        if (Math.abs(physics.velocity.x) < maxSpeed) {
+                            physics.addForce(panX, 0, 0);
+                        }
+                        if (Math.abs(physics.velocity.z) < maxSpeed) {
+                            physics.addForce(0, 0, panY);
+                        }
+                    }
+
+                    if (mobileInputs.jump) {
+                        physics.jump();
                     }
                 }
             }
