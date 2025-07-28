@@ -342,6 +342,51 @@ class Game {
 window.addEventListener('load', async () => {
     const game = new Game();
     await game.init();
+
+    const joystick = document.getElementById('joystick');
+    const joystickHandle = document.getElementById('joystick-handle');
+    const joystickRect = joystick.getBoundingClientRect();
+    let dragging = false;
+
+    joystickHandle.addEventListener('mousedown', () => {
+        dragging = true;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (dragging) {
+            const x = e.clientX - joystickRect.left - joystickRect.width / 2;
+            const y = e.clientY - joystickRect.top - joystickRect.height / 2;
+            const distance = Math.min(Math.sqrt(x * x + y * y), joystickRect.width / 2);
+            const angle = Math.atan2(y, x);
+
+            joystickHandle.style.left = `${joystickRect.width / 2 + Math.cos(angle) * distance - joystickHandle.offsetWidth / 2}px`;
+            joystickHandle.style.top = `${joystickRect.height / 2 + Math.sin(angle) * distance - joystickHandle.offsetHeight / 2}px`;
+
+            const mobileInputSystem = game.engine.getSystem('MobileInputSystem');
+            mobileInputSystem.inputs.pan.x = (Math.cos(angle) * distance) * 2;
+            mobileInputSystem.inputs.pan.y = (Math.sin(angle) * distance) * 2;
+        }
+    });
+
+    window.addEventListener('mouseup', () => {
+        dragging = false;
+        joystickHandle.style.left = `${joystickRect.width / 2 - joystickHandle.offsetWidth / 2}px`;
+        joystickHandle.style.top = `${joystickRect.height / 2 - joystickHandle.offsetHeight / 2}px`;
+        const mobileInputSystem = game.engine.getSystem('MobileInputSystem');
+        mobileInputSystem.inputs.pan.x = 0;
+        mobileInputSystem.inputs.pan.y = 0;
+    });
+
+    const jumpButton = document.getElementById('jump-button');
+    jumpButton.addEventListener('mousedown', () => {
+        const mobileInputSystem = game.engine.getSystem('MobileInputSystem');
+        mobileInputSystem.inputs.jump = true;
+    });
+
+    jumpButton.addEventListener('mouseup', () => {
+        const mobileInputSystem = game.engine.getSystem('MobileInputSystem');
+        mobileInputSystem.inputs.jump = false;
+    });
     
     // Add some debug info to the page
     const info = document.createElement('div');
