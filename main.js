@@ -366,8 +366,8 @@ window.addEventListener('load', async () => {
             joystickHandle.style.left = `${joystickRect.width / 2 + Math.cos(angle) * distance - joystickHandle.offsetWidth / 2}px`;
             joystickHandle.style.top = `${joystickRect.height / 2 + Math.sin(angle) * distance - joystickHandle.offsetHeight / 2}px`;
 
-            mobileInputSystem.inputs.pan.x = (Math.cos(angle) * distance) * 2;
-            mobileInputSystem.inputs.pan.y = (Math.sin(angle) * distance) * 2;
+            mobileInputSystem.inputs.pan.x = (Math.cos(angle) * distance) * PAN_MULTIPLIER;
+            mobileInputSystem.inputs.pan.y = (Math.sin(angle) * distance) * PAN_MULTIPLIER;
         }
     };
 
