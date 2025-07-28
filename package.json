@@ -9,10 +9,19 @@
     "dev": "python -m http.server 8000"
   },
   "type": "module",
-  "keywords": ["game-engine", "threejs", "ecs", "3d", "webgl"],
+  "keywords": [
+    "game-engine",
+    "threejs",
+    "ecs",
+    "3d",
+    "webgl"
+  ],
   "author": "",
   "license": "ISC",
   "engines": {
     "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "hammerjs": "^2.0.8"
   }
 }
