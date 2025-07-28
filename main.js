@@ -373,8 +373,10 @@ window.addEventListener('load', async () => {
 
     const handleUp = () => {
         dragging = false;
-        joystickHandle.style.left = `${joystickRect.width / 2 - joystickHandle.offsetWidth / 2}px`;
-        joystickHandle.style.top = `${joystickRect.height / 2 - joystickHandle.offsetHeight / 2}px`;
+        if (joystickRect) {
+            joystickHandle.style.left = `${joystickRect.width / 2 - joystickHandle.offsetWidth / 2}px`;
+            joystickHandle.style.top = `${joystickRect.height / 2 - joystickHandle.offsetHeight / 2}px`;
+        }
         mobileInputSystem.inputs.pan.x = 0;
         mobileInputSystem.inputs.pan.y = 0;
     };
