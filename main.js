@@ -340,8 +340,21 @@ class Game {
 
 // Start the game when page loads
 window.addEventListener('load', async () => {
-    const game = new Game();
-    await game.init();
+    const logger = document.getElementById('logger');
+    const log = (message) => {
+        logger.innerHTML += message + '<br>';
+    };
+
+    window.onerror = (message, source, lineno, colno, error) => {
+        log(`Error: ${message} at ${source}:${lineno}:${colno}`);
+    };
+
+    try {
+        const game = new Game();
+        await game.init();
+    } catch (error) {
+        log('An error occurred during game initialization: ' + error);
+    }
 
     const joystick = document.getElementById('joystick');
     const joystickHandle = document.getElementById('joystick-handle');
@@ -366,17 +379,15 @@ window.addEventListener('load', async () => {
             joystickHandle.style.left = `${joystickRect.width / 2 + Math.cos(angle) * distance - joystickHandle.offsetWidth / 2}px`;
             joystickHandle.style.top = `${joystickRect.height / 2 + Math.sin(angle) * distance - joystickHandle.offsetHeight / 2}px`;
 
-            mobileInputSystem.inputs.pan.x = (Math.cos(angle) * distance) * PAN_MULTIPLIER;
-            mobileInputSystem.inputs.pan.y = (Math.sin(angle) * distance) * PAN_MULTIPLIER;
+            mobileInputSystem.inputs.pan.x = (Math.cos(angle) * distance) * 2;
+            mobileInputSystem.inputs.pan.y = (Math.sin(angle) * distance) * 2;
         }
     };
 
     const handleUp = () => {
         dragging = false;
-        if (joystickRect) {
-            joystickHandle.style.left = `${joystickRect.width / 2 - joystickHandle.offsetWidth / 2}px`;
-            joystickHandle.style.top = `${joystickRect.height / 2 - joystickHandle.offsetHeight / 2}px`;
-        }
+        joystickHandle.style.left = `${joystickRect.width / 2 - joystickHandle.offsetWidth / 2}px`;
+        joystickHandle.style.top = `${joystickRect.height / 2 - joystickHandle.offsetHeight / 2}px`;
         mobileInputSystem.inputs.pan.x = 0;
         mobileInputSystem.inputs.pan.y = 0;
     };
