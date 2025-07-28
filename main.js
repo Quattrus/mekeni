@@ -345,48 +345,61 @@ window.addEventListener('load', async () => {
 
     const joystick = document.getElementById('joystick');
     const joystickHandle = document.getElementById('joystick-handle');
-    const joystickRect = joystick.getBoundingClientRect();
+    let joystickRect;
     let dragging = false;
 
-    joystickHandle.addEventListener('mousedown', () => {
+    const handleDown = (e) => {
         dragging = true;
-    });
+        joystickRect = joystick.getBoundingClientRect();
+    };
 
-    window.addEventListener('mousemove', (e) => {
+    const mobileInputSystem = game.engine.getSystem('MobileInputSystem');
+    const handleMove = (e) => {
         if (dragging) {
-            const x = e.clientX - joystickRect.left - joystickRect.width / 2;
-            const y = e.clientY - joystickRect.top - joystickRect.height / 2;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            const x = clientX - joystickRect.left - joystickRect.width / 2;
+            const y = clientY - joystickRect.top - joystickRect.height / 2;
             const distance = Math.min(Math.sqrt(x * x + y * y), joystickRect.width / 2);
             const angle = Math.atan2(y, x);
 
             joystickHandle.style.left = `${joystickRect.width / 2 + Math.cos(angle) * distance - joystickHandle.offsetWidth / 2}px`;
             joystickHandle.style.top = `${joystickRect.height / 2 + Math.sin(angle) * distance - joystickHandle.offsetHeight / 2}px`;
 
-            const mobileInputSystem = game.engine.getSystem('MobileInputSystem');
             mobileInputSystem.inputs.pan.x = (Math.cos(angle) * distance) * 2;
             mobileInputSystem.inputs.pan.y = (Math.sin(angle) * distance) * 2;
         }
-    });
+    };
 
-    window.addEventListener('mouseup', () => {
+    const handleUp = () => {
         dragging = false;
         joystickHandle.style.left = `${joystickRect.width / 2 - joystickHandle.offsetWidth / 2}px`;
         joystickHandle.style.top = `${joystickRect.height / 2 - joystickHandle.offsetHeight / 2}px`;
-        const mobileInputSystem = game.engine.getSystem('MobileInputSystem');
         mobileInputSystem.inputs.pan.x = 0;
         mobileInputSystem.inputs.pan.y = 0;
-    });
+    };
+
+    const events = {
+        down: ['mousedown', 'touchstart'],
+        move: ['mousemove', 'touchmove'],
+        up: ['mouseup', 'touchend']
+    };
+
+    events.down.forEach(event => joystickHandle.addEventListener(event, handleDown));
+    events.move.forEach(event => window.addEventListener(event, handleMove));
+    events.up.forEach(event => window.addEventListener(event, handleUp));
 
     const jumpButton = document.getElementById('jump-button');
-    jumpButton.addEventListener('mousedown', () => {
-        const mobileInputSystem = game.engine.getSystem('MobileInputSystem');
+    const jumpDown = () => {
         mobileInputSystem.inputs.jump = true;
-    });
+    };
 
-    jumpButton.addEventListener('mouseup', () => {
-        const mobileInputSystem = game.engine.getSystem('MobileInputSystem');
+    const jumpUp = () => {
         mobileInputSystem.inputs.jump = false;
-    });
+    };
+
+    events.down.forEach(event => jumpButton.addEventListener(event, jumpDown));
+    events.up.forEach(event => jumpButton.addEventListener(event, jumpUp));
     
     // Add some debug info to the page
     const info = document.createElement('div');
