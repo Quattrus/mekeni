@@ -11,6 +11,7 @@ export class Transform {
         this.position = { ...position };
         this.rotation = { ...rotation };
         this.scale = { ...scale };
+        this.dirty = true;
         
         // Optional parent-child hierarchy
         this.parent = null;
@@ -22,12 +23,14 @@ export class Transform {
         this.position.x = x;
         this.position.y = y;
         this.position.z = z;
+        this.dirty = true;
     }
 
     translate(x, y, z) {
         this.position.x += x;
         this.position.y += y;
         this.position.z += z;
+        this.dirty = true;
     }
 
     // Rotation methods (in radians)
@@ -35,12 +38,14 @@ export class Transform {
         this.rotation.x = x;
         this.rotation.y = y;
         this.rotation.z = z;
+        this.dirty = true;
     }
 
     rotate(x, y, z) {
         this.rotation.x += x;
         this.rotation.y += y;
         this.rotation.z += z;
+        this.dirty = true;
     }
 
     // Scale methods
@@ -48,6 +53,7 @@ export class Transform {
         this.scale.x = x;
         this.scale.y = y;
         this.scale.z = z;
+        this.dirty = true;
     }
 
     // Hierarchy methods

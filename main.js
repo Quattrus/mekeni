@@ -107,7 +107,6 @@ class Game {
         const groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
         groundMesh.position.set(0, -0.1, 0); // Match physics position
         groundMesh.receiveShadow = true;
-        this.scene.add(groundMesh);
 
         this.engine.world.addComponent(groundEntity, 'Transform', new Transform({
             position: { x: 0, y: -0.1, z: 0 },
@@ -121,6 +120,7 @@ class Game {
             receiveShadows: true,
             castShadows: false
         }));
+        this.engine.getSystem('RenderingSystem').addMeshToScene(groundMesh);
 
         // 2. Create some cubes
         for (let i = 0; i < 5; i++) {
@@ -132,7 +132,6 @@ class Game {
             });
             const cubeMesh = new THREE.Mesh(cubeGeometry, cubeMaterial);
             cubeMesh.castShadow = true;
-            this.scene.add(cubeMesh);
 
             this.engine.world.addComponent(cubeEntity, 'Transform', new Transform({
                 position: { x: (i - 2) * 2, y: 1, z: 0 },
@@ -152,6 +151,8 @@ class Game {
                 mass: 1.0,
                 useGravity: true
             }));
+
+            this.engine.getSystem('RenderingSystem').addMeshToScene(cubeMesh);
         }
 
         // 3. Create a player entity with input
@@ -161,7 +162,6 @@ class Game {
         const playerMaterial = new THREE.MeshLambertMaterial({ color: 0xff6b6b });
         const playerMesh = new THREE.Mesh(playerGeometry, playerMaterial);
         playerMesh.castShadow = true;
-        this.scene.add(playerMesh);
 
         this.engine.world.addComponent(playerEntity, 'Transform', new Transform({
             position: { x: 0, y: 2, z: 5 }
@@ -195,6 +195,8 @@ class Game {
             friction: 0.85, // Good ground friction for stopping
             isGrounded: true // Start as grounded
         }));
+
+        this.engine.getSystem('RenderingSystem').addMeshToScene(playerMesh);
 
         // Add a simple movement system (inline for demo)
         this.engine.addSystem({
@@ -340,6 +342,12 @@ window.addEventListener('load', async () => {
     `;
     document.body.appendChild(info);
 });
+
+    destroy() {
+        this.engine.stop();
+        this.engine.getSystem('RenderingSystem').dispose();
+    }
+}
 
 // Export for potential external use
 export { Game };

@@ -11,6 +11,8 @@ export class RenderingSystem extends System {
         this.scene = scene;
         this.camera = camera;
         this.renderer = renderer;
+        this.sceneGraph = new THREE.Group();
+        this.scene.add(this.sceneGraph);
         
         // Render targets and post-processing
         this.renderTargets = [];
@@ -38,8 +40,8 @@ export class RenderingSystem extends System {
         // Update mesh transforms from Transform components
         this.updateMeshTransforms(world);
         
-        // Update visibility
-        this.updateVisibility(world);
+        // Cull meshes
+        this.cullMeshes(world);
         
         // Render the scene
         this.renderer.render(this.scene, this.camera);
@@ -52,7 +54,7 @@ export class RenderingSystem extends System {
             const transform = entity.Transform;
             const renderer = entity.MeshRenderer;
             
-            if (renderer.mesh) {
+            if (renderer.mesh && transform.dirty) {
                 // Update position
                 renderer.mesh.position.set(
                     transform.position.x,
@@ -73,33 +75,41 @@ export class RenderingSystem extends System {
                     transform.scale.y,
                     transform.scale.z
                 );
+
+                transform.dirty = false;
             }
         }
     }
 
-    updateVisibility(world) {
+    cullMeshes(world) {
+        const frustum = new THREE.Frustum();
+        const camera = this.camera;
+        const projScreenMatrix = new THREE.Matrix4();
+
+        projScreenMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+        frustum.setFromProjectionMatrix(projScreenMatrix);
+
         const entities = world.query('MeshRenderer');
-        
+
         for (const entity of entities) {
             const renderer = entity.MeshRenderer;
-            
+
             if (renderer.mesh) {
-                renderer.mesh.visible = renderer.visible;
-                renderer.mesh.castShadow = renderer.castShadows;
-                renderer.mesh.receiveShadow = renderer.receiveShadows;
-                renderer.mesh.renderOrder = renderer.renderOrder;
+                const boundingBox = new THREE.Box3().setFromObject(renderer.mesh);
+                renderer.mesh.visible = frustum.intersectsBox(boundingBox);
             }
         }
     }
+
 
     // Add mesh to scene
     addMeshToScene(mesh) {
-        this.scene.add(mesh);
+        this.sceneGraph.add(mesh);
     }
 
     // Remove mesh from scene
     removeMeshFromScene(mesh) {
-        this.scene.remove(mesh);
+        this.sceneGraph.remove(mesh);
     }
 
     onResize(width, height) {
@@ -126,5 +136,42 @@ export class RenderingSystem extends System {
     setClearColor(color) {
         this.clearColor = color;
         this.renderer.setClearColor(color);
+    }
+
+    dispose() {
+        // Dispose of renderer
+        this.renderer.dispose();
+
+        // Dispose of scene and its children
+        this.scene.traverse(object => {
+            if (object.isMesh) {
+                if (object.geometry) {
+                    object.geometry.dispose();
+                }
+                if (object.material) {
+                    if (object.material.isMaterial) {
+                        this.disposeMaterial(object.material);
+                    } else {
+                        // For multi-material objects
+                        for (const material of object.material) {
+                            this.disposeMaterial(material);
+                        }
+                    }
+                }
+            }
+        });
+
+        this.sceneGraph.clear();
+        this.scene.clear();
+    }
+
+    disposeMaterial(material) {
+        material.dispose();
+        // Dispose of textures
+        for (const key in material) {
+            if (material[key] && typeof material[key].dispose === 'function') {
+                material[key].dispose();
+            }
+        }
     }
 }
